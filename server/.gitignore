@@ -1,0 +1,101 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE specific files
+.idea/
+*.iml
+*.ipr
+*.iws
+.settings/
+.project
+.classpath
+.factorypath
+.springBeans
+
+# VS Code
+#.vscode/
+
+# Eclipse
+bin/
+
+# IntelliJ
+out/
+.idea_modules/
+*.iml
+
+# Mac OS X
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Application
+application*.properties
+application*.yml
+!application-example.yml
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.h2.db
+*.h2.trace
+
+# Flyway
+flyway-*
+
+# Build
+target/
+build/
+
+# Spring Boot
+HELP.md
+
+# Local configuration files
+*.local.*
+
+# VS Code workspace settings
+*.code-workspace
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Application logs and reports
+**/logs/
+**/reports/
+
+# Local development environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
