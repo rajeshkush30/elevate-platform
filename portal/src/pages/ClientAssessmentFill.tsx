@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Paper, Typography, Stack, Button, RadioGroup, FormControlLabel, Radio, TextField, CircularProgress, Alert } from '@mui/material';
+import { Container, Paper, Typography, Stack, Button, RadioGroup, FormControlLabel, Radio, TextField, CircularProgress, Alert, Checkbox } from '@mui/material';
 import { getAssessmentDetails, saveAnswers, AssessmentQuestion } from '../api/myAssessments';
 import questionnaireApi from '../api/questionnaire';
 import { useToast } from '../components/ToastProvider';
@@ -9,7 +9,7 @@ export default function ClientAssessmentFill() {
   const { clientAssessmentId } = useParams();
   const { showToast } = useToast();
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<number, { answerText?: string; optionId?: number }>>({});
+  const [answers, setAnswers] = useState<Record<number, { answerText?: string; optionId?: number; optionIds?: number[] }>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,11 +25,12 @@ export default function ClientAssessmentFill() {
         if (mounted && qs.length > 0) {
           setQuestions(qs);
           // Prefill answers from existingAnswer
-          const initial: Record<number, { answerText?: string; optionId?: number }> = {};
+          const initial: Record<number, { answerText?: string; optionId?: number; optionIds?: number[] }> = {};
           qs.forEach(q => {
             if (q.existingAnswer) {
               if (q.existingAnswer.optionIds && q.existingAnswer.optionIds.length > 0) {
-                initial[q.id] = { optionId: Number(q.existingAnswer.optionIds[0]) };
+                // if multi-select, keep all; else pick first
+                initial[q.id] = { optionIds: q.existingAnswer.optionIds.map(Number), optionId: Number(q.existingAnswer.optionIds[0]) };
               } else if (q.existingAnswer.answerText) {
                 initial[q.id] = { answerText: q.existingAnswer.answerText };
               }
@@ -65,7 +66,8 @@ export default function ClientAssessmentFill() {
     try {
       const items = questions.map(q => {
         const a = answers[q.id] || {};
-        const optionIds = a.optionId != null ? [a.optionId] : undefined;
+        const isMulti = (q.type || '').toUpperCase().includes('MULTI') || (q.type || '').toUpperCase().includes('CHECK');
+        const optionIds = isMulti ? (a.optionIds && a.optionIds.length ? a.optionIds : undefined) : (a.optionId != null ? [a.optionId] : undefined);
         return { questionId: q.id, answerText: a.answerText, optionIds };
       });
       await saveAnswers(clientAssessmentId, items, submit);
@@ -94,16 +96,38 @@ export default function ClientAssessmentFill() {
           {questions.map(q => (
             <div key={q.id}>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>{q.text}</Typography>
-              {q.options && q.options.length > 0 ? (
-                <RadioGroup
-                  value={answers[q.id]?.optionId ?? ''}
-                  onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: { ...prev[q.id], optionId: Number(e.target.value) } }))}
-                >
-                  {q.options.map(o => (
-                    <FormControlLabel key={o.id} value={o.id} control={<Radio />} label={o.text} />
-                  ))}
-                </RadioGroup>
-              ) : (
+              {q.options && q.options.length > 0 ? (() => {
+                const isMulti = (q.type || '').toUpperCase().includes('MULTI') || (q.type || '').toUpperCase().includes('CHECK');
+                if (!isMulti) {
+                  return (
+                    <RadioGroup
+                      value={answers[q.id]?.optionId ?? ''}
+                      onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: { ...prev[q.id], optionId: Number(e.target.value), optionIds: undefined } }))}
+                    >
+                      {q.options.map(o => (
+                        <FormControlLabel key={o.id} value={o.id} control={<Radio />} label={o.text} />
+                      ))}
+                    </RadioGroup>
+                  );
+                }
+                const selected = new Set(answers[q.id]?.optionIds || []);
+                return (
+                  <Stack>
+                    {q.options.map(o => (
+                      <FormControlLabel key={o.id}
+                        control={<Checkbox checked={selected.has(o.id)} onChange={(e) => {
+                          setAnswers(prev => {
+                            const cur = new Set(prev[q.id]?.optionIds || []);
+                            if (e.target.checked) cur.add(o.id); else cur.delete(o.id);
+                            return { ...prev, [q.id]: { ...prev[q.id], optionIds: Array.from(cur), optionId: undefined } };
+                          });
+                        }} />}
+                        label={o.text}
+                      />
+                    ))}
+                  </Stack>
+                );
+              })() : (
                 <TextField fullWidth value={answers[q.id]?.answerText ?? ''} onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: { ...prev[q.id], answerText: e.target.value } }))} />
               )}
             </div>

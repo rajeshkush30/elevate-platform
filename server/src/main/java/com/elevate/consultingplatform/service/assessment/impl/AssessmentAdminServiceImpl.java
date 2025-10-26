@@ -70,9 +70,8 @@ public class AssessmentAdminServiceImpl implements AssessmentAdminService {
             if (userOpt.isEmpty()) continue; // skip invalid ids silently
             User client = userOpt.get();
 
-            // Avoid duplicate assignment: check if already exists
-            boolean exists = clientAssessmentRepository.findByClientOrderByIdDesc(client).stream()
-                    .anyMatch(ca -> ca.getAssessment().getId().equals(assessmentId));
+            // Avoid duplicate assignment: check if already exists (efficient query)
+            boolean exists = !clientAssessmentRepository.findByClientAndAssessment(client, assessment).isEmpty();
             if (exists) continue;
 
             ClientAssessment ca = ClientAssessment.builder()

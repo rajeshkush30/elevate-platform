@@ -2,6 +2,7 @@ package com.elevate.consultingplatform.entity.assessment;
 
 import com.elevate.consultingplatform.common.BaseEntity;
 import com.elevate.consultingplatform.entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -22,6 +23,7 @@ public class ClientAssessment extends BaseEntity {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "client_id", nullable = false)
+    @JsonIgnore // do not serialize client details in client responses
     private User client;
 
     @ManyToOne(optional = false)

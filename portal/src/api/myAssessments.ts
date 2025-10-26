@@ -30,13 +30,14 @@ export async function saveAnswers(clientAssessmentId: string, items: SaveAnswerI
   await http.post(`/api/v1/client/assessments/${clientAssessmentId}/answers`, body);
 }
 
-export type AssessmentQuestion = { id: number; text: string; options: { id: number; text: string }[]; existingAnswer?: { answerText?: string | null; optionIds?: number[] } };
+export type AssessmentQuestion = { id: number; text: string; type?: string; options: { id: number; text: string }[]; existingAnswer?: { answerText?: string | null; optionIds?: number[] } };
 export async function getAssessmentDetails(clientAssessmentId: string): Promise<AssessmentQuestion[]> {
   const { data } = await http.get(`/api/v1/client/assessments/${clientAssessmentId}/details`);
   const rawQs = Array.isArray((data as any)?.questions) ? (data as any).questions : [];
   return rawQs.map((q: any) => ({
     id: Number(q.id),
     text: String(q.text ?? q.title ?? ''),
+    type: q.type ? String(q.type) : undefined,
     options: Array.isArray(q.options) ? q.options.map((o: any) => ({ id: Number(o.id), text: String(o.text ?? o.label ?? '') })) : [],
     existingAnswer: q.existingAnswer ? {
       answerText: q.existingAnswer.answerText ?? null,

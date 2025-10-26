@@ -1,6 +1,8 @@
 package com.elevate.consultingplatform.entity.catalog;
 
 import com.elevate.consultingplatform.common.HierarchyNode;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -20,6 +22,7 @@ public class Stage extends HierarchyNode {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "segment_id", nullable = false)
+    @JsonBackReference("segment-stage")
     private Segment segment;
 
     @Enumerated(EnumType.STRING)
@@ -46,6 +49,6 @@ public class Stage extends HierarchyNode {
 
     @OneToMany(mappedBy = "stage")
     @Builder.Default
+    @JsonManagedReference("stage-assessment")
     private List<Assessment> assessments = new ArrayList<>();
 }
-

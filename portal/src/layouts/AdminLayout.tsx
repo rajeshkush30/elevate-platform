@@ -59,21 +59,27 @@ const AdminLayout = () => {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton component={RouterLink} to="/admin/clients">
-            <ListItemIcon><GroupIcon /></ListItemIcon>
-            <ListItemText primary="Clients" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
           <ListItemButton component={RouterLink} to="/admin/catalog">
             <ListItemIcon><CategoryIcon /></ListItemIcon>
             <ListItemText primary="Catalog" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton component={RouterLink} to="/admin/segments">
-            <ListItemIcon><CategoryIcon /></ListItemIcon>
-            <ListItemText primary="Segments" />
+          <ListItemButton component={RouterLink} to="/admin/questionnaires">
+            <ListItemIcon><QuizIcon /></ListItemIcon>
+            <ListItemText primary="Questionnaires" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/admin/assessment-wizard">
+            <ListItemIcon><AssessmentIcon /></ListItemIcon>
+            <ListItemText primary="Assessment Wizard" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/admin/clients">
+            <ListItemIcon><GroupIcon /></ListItemIcon>
+            <ListItemText primary="Clients" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
