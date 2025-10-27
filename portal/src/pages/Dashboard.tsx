@@ -8,6 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useMemo, useState } from 'react';
 import { listMyAssessments, MyAssessment } from '../api/myAssessments';
+import { getTrainingStatus, type TrainingModuleStatus } from '../api/training';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
@@ -15,6 +16,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<MyAssessment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [training, setTraining] = useState<TrainingModuleStatus[]>([]);
+  const [trainingLoading, setTrainingLoading] = useState(true);
   const initials = `${(user?.firstName || 'U')[0]}${(user?.lastName || '').slice(0,1)}`.toUpperCase();
   
   useEffect(() => {
@@ -25,6 +28,18 @@ const Dashboard = () => {
         setItems(data);
       } finally {
         setLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      setTrainingLoading(true);
+      try {
+        const res = await getTrainingStatus();
+        setTraining(res.modules || []);
+      } finally {
+        setTrainingLoading(false);
       }
     })();
   }, []);
@@ -156,6 +171,32 @@ const Dashboard = () => {
                   </Stack>
                 )}
               </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Training Progress */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Training Progress</Typography>
+              {trainingLoading ? (
+                <Typography color="text.secondary">Loading...</Typography>
+              ) : training.length === 0 ? (
+                <Typography color="text.secondary">No training assigned yet.</Typography>
+              ) : (
+                <Stack spacing={1}>
+                  {training.slice(0, 5).map((m, idx) => (
+                    <Stack key={idx} direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2">{m.name || m.externalId || 'Module'}</Typography>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Chip size="small" label={m.status} color={m.status === 'COMPLETED' ? 'success' : m.status === 'IN_PROGRESS' ? 'warning' : 'default'} />
+                        {typeof m.completion === 'number' && <Chip size="small" label={`${m.completion}%`} />}
+                      </Stack>
+                    </Stack>
+                  ))}
+                </Stack>
+              )}
             </CardContent>
           </Card>
         </Grid>

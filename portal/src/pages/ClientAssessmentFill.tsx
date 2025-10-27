@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Paper, Typography, Stack, Button, RadioGroup, FormControlLabel, Radio, TextField, CircularProgress, Alert, Checkbox } from '@mui/material';
 import { getAssessmentDetails, saveAnswers, AssessmentQuestion } from '../api/myAssessments';
 import questionnaireApi from '../api/questionnaire';
@@ -7,6 +7,7 @@ import { useToast } from '../components/ToastProvider';
 
 export default function ClientAssessmentFill() {
   const { clientAssessmentId } = useParams();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, { answerText?: string; optionId?: number; optionIds?: number[] }>>({});
@@ -72,6 +73,10 @@ export default function ClientAssessmentFill() {
       });
       await saveAnswers(clientAssessmentId, items, submit);
       showToast(submit ? 'Submitted' : 'Saved', 'success');
+      if (submit) {
+        // Navigate to result page so backend scoring/result can be viewed
+        navigate(`/assessment/result/${clientAssessmentId}`);
+      }
     } catch (e: any) {
       showToast(e?.message || 'Save failed', 'error');
     }

@@ -1,6 +1,7 @@
 package com.elevate.consultingplatform.service.assessment.impl;
 
 import com.elevate.consultingplatform.entity.assessment.*;
+import com.elevate.consultingplatform.integration.AIClient;
 import com.elevate.consultingplatform.entity.User;
 import com.elevate.consultingplatform.repository.UserRepository;
 import com.elevate.consultingplatform.repository.assessment.*;
@@ -25,6 +26,7 @@ public class AssessmentClientServiceImpl implements AssessmentClientService {
     private final QuestionRepository questionRepository;
     private final QuestionOptionRepository questionOptionRepository;
     private final UserRepository userRepository;
+    private final AIClient aiClient;
 
     @PersistenceContext
     private EntityManager em;
@@ -104,6 +106,35 @@ public class AssessmentClientServiceImpl implements AssessmentClientService {
             }
             ca.setStatus(AssessmentStatus.SUBMITTED);
             ca.setScore(total);
+
+            // Determine stage and generate summary via AI
+            Questionnaire questionnaire = ca.getAssessment().getQuestionnaire();
+            if (questionnaire != null) {
+                // Build AI answer payload
+                List<Question> questions = questionRepository.findByQuestionnaireOrderByIdAsc(questionnaire);
+                List<AIClient.AnswerItem> items = new java.util.ArrayList<>();
+                for (Question q : questions) {
+                    var ansOpt = assessmentAnswerRepository.findByClientAssessmentAndQuestion(ca, q);
+                    String text = ansOpt.map(AssessmentAnswer::getAnswerText).orElse(null);
+                    java.util.List<Long> optionIds = new java.util.ArrayList<>();
+                    if (ansOpt.isPresent()) {
+                        var links = assessmentAnswerOptionRepository.findByAnswer(ansOpt.get());
+                        for (AssessmentAnswerOption link : links) {
+                            optionIds.add(link.getOption().getId());
+                        }
+                    }
+                    items.add(new AIClient.AnswerItem(q.getId(), text, optionIds.isEmpty() ? null : optionIds));
+                }
+                var stageResp = aiClient.determineStage(new AIClient.StageRequest(
+                        ca.getId(), questionnaire.getId(), items, java.util.Map.of("version", "v1")
+                ));
+                var summaryResp = aiClient.generateSummary(new AIClient.SummaryRequest(
+                        stageResp.stage(), total.doubleValue(), java.util.Map.of()
+                ));
+                ca.setStage(stageResp.stage());
+                ca.setAiConfidence(stageResp.confidence());
+                ca.setStageSummary(summaryResp.summary());
+            }
         } else {
             if (ca.getStatus() == AssessmentStatus.ASSIGNED) {
                 ca.setStatus(AssessmentStatus.IN_PROGRESS);

@@ -98,16 +98,11 @@ dist/
 *.crt
 *.key
 
-# Application specific
-**/application*.yml
-**/application*.yaml
-**/application*.properties
-!**/src/main/**/application*.yml
-!**/src/main/**/application*.yaml
-!**/src/main/**/application*.properties
+# Application specific (track application*.yml/yaml/properties in repo)
+# Previously ignored; now allowed so we can commit profile configs (do not commit secrets)
 
 # Frontend build directories
 admin/dist/
 admin/build/
-client/dist/
-client/build/
+portal/dist/
+portal/build/

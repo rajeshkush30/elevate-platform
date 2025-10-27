@@ -32,6 +32,7 @@ import MyAssessments from '../pages/MyAssessments';
 import ClientAssessmentFill from '../pages/ClientAssessmentFill';
 import AssessmentResult from '../pages/AssessmentResult';
 import AdminAIPrompts from '../pages/AdminAIPrompts';
+import Chat from '../pages/Chat';
 
 const AppContent = () => {
   const { loading } = useAuth();
@@ -64,6 +65,8 @@ const AppContent = () => {
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      {/* Chat should be accessible to everyone; do not wrap in PublicRoute */}
+      <Route path="/chat" element={<Chat />} />
 
       <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/my-assessments" element={<ProtectedRoute><MyAssessments /></ProtectedRoute>} />
@@ -87,7 +90,7 @@ const AppContent = () => {
       </Route>
 
       <Route path="/questionnaire" element={<ProtectedRoute><Questionnaire /></ProtectedRoute>} />
-      <Route path="/assessment/result" element={<ProtectedRoute><AssessmentResult /></ProtectedRoute>} />
+      <Route path="/assessment/result/:clientAssessmentId" element={<ProtectedRoute><AssessmentResult /></ProtectedRoute>} />
       <Route path="/assessment/history" element={<ProtectedRoute><AssessmentHistory /></ProtectedRoute>} />
       <Route path="/training" element={<ProtectedRoute><Training /></ProtectedRoute>} />
       <Route path="/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
@@ -99,7 +102,7 @@ const AppContent = () => {
 // Decides landing route based on current user's role
 const HomeRouter = () => {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/chat" replace />;
   return <Navigate to={user.role === 'ADMIN' ? '/admin' : '/dashboard'} replace />;
 };
 

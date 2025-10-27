@@ -45,4 +45,13 @@ public class ClientAssessment extends BaseEntity {
 
     @Column(name = "score", precision = 10, scale = 2)
     private BigDecimal score;
+
+    @Column(name = "stage", length = 64)
+    private String stage;
+
+    @Column(name = "stage_summary", columnDefinition = "TEXT")
+    private String stageSummary;
+
+    @Column(name = "ai_confidence")
+    private Double aiConfidence;
 }

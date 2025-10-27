@@ -27,4 +27,44 @@ public class OpenApiConfig {
                 .pathsToMatch("/api/v1/client/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi publicApi() {
+        return GroupedOpenApi.builder()
+                .group("public")
+                .pathsToMatch("/api/public/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi authApi() {
+        return GroupedOpenApi.builder()
+                .group("auth")
+                .pathsToMatch("/api/v1/auth/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi chatApi() {
+        return GroupedOpenApi.builder()
+                .group("chat")
+                .pathsToMatch("/api/chat/**", "/api/v1/chat/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi questionnaireApi() {
+        return GroupedOpenApi.builder()
+                .group("questionnaire")
+                .pathsToMatch("/api/v1/questionnaire/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi integrationsApi() {
+        return GroupedOpenApi.builder()
+                .group("integrations")
+                .pathsToMatch("/api/v1/integrations/**")
+                .build();
+    }
 }

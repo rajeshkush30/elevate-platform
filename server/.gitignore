@@ -56,10 +56,8 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# Application
-application*.properties
-application*.yml
-!application-example.yml
+# Application (track application configs in repo; do not commit secrets)
+# Previously ignored; now allowed so we can add application-live.yml and others
 
 # Logs
 logs/

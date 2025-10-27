@@ -1,6 +1,7 @@
 import { AppBar, Toolbar, Typography, Box, IconButton, Avatar, Menu, MenuItem, Tooltip } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Logout from '@mui/icons-material/Logout';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import ListAltIcon from '@mui/icons-material/ListAlt';
@@ -26,6 +27,9 @@ const TopAppBar = () => {
           </IconButton>
         </Tooltip>
         <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+          <MenuItem onClick={() => { window.location.href = '/chat'; setAnchor(null); }}>
+            <ChatBubbleOutlineIcon fontSize="small" style={{ marginRight: 8 }} /> Chat
+          </MenuItem>
           <MenuItem onClick={() => { window.location.href = '/dashboard'; setAnchor(null); }}>
             <DashboardIcon fontSize="small" style={{ marginRight: 8 }} /> Dashboard
           </MenuItem>

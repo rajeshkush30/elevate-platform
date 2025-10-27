@@ -32,6 +32,9 @@ public class SecurityConfig {
     // Public endpoints that don't require authentication
     private static final String[] PUBLIC_ENDPOINTS = {
         "/api/v1/auth/**",
+        "/api/v1/chat/lead-intake",
+        "/api/chat/lead-intake",
+        "/api/public/**",
         "/v3/api-docs/**",
         "/swagger-ui/**",
         "/swagger-ui.html",

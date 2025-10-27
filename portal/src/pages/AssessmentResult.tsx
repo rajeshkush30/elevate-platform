@@ -1,22 +1,35 @@
-import { Container, Paper, Typography, Box, Button } from '@mui/material';
+import { Container, Paper, Typography, Box, Button, CircularProgress } from '@mui/material';
 import { useEffect, useState } from 'react';
-
-interface Result {
-  submissionId: string;
-  stage: string;
-  score: number;
-  summary: string;
-}
+import { useParams } from 'react-router-dom';
+import { getStage, type StageView } from '../api/assessmentStage';
 
 const AssessmentResult = () => {
-  const [result, setResult] = useState<Result | null>(null);
+  const { clientAssessmentId } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<StageView | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('lastAssessmentResult');
-      if (raw) setResult(JSON.parse(raw));
-    } catch {}
-  }, []);
+    (async () => {
+      if (!clientAssessmentId) { setLoading(false); return; }
+      try {
+        const data = await getStage(clientAssessmentId);
+        setResult(data);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [clientAssessmentId]);
+
+  if (loading) {
+    return (
+      <Container maxWidth="md">
+        <Paper sx={{ p: 3, mt: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <CircularProgress size={20} />
+          <Typography>Loading result...</Typography>
+        </Paper>
+      </Container>
+    );
+  }
 
   if (!result) {
     return (
@@ -40,19 +53,27 @@ const AssessmentResult = () => {
     <Container maxWidth="md">
       <Paper sx={{ p: 3, mt: 3 }}>
         <Typography variant="h5">Assessment Result</Typography>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }}>
-          Submission ID: {result.submissionId}
-        </Typography>
         <Box sx={{ mt: 2 }}>
-          <Typography variant="h6">Stage: {result.stage}</Typography>
-          <Typography variant="body1" sx={{ mt: 1 }}>Score: {result.score}</Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>{result.summary}</Typography>
+          <Typography variant="h6">Stage: {result.stage ?? '-'}</Typography>
+          <Typography variant="body1" sx={{ mt: 1 }}>Score: {result.score ?? '-'}</Typography>
+          <Typography variant="body1" sx={{ mt: 2 }}>{result.summary ?? 'Summary will appear once available.'}</Typography>
         </Box>
-        <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-          <Button variant="contained" href="/dashboard">
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            Next: Proceed to payment via Zoho to unlock your training for this stage.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            You will receive a payment link by email from Zoho. After payment, click Go to Training and use the Start button. If payment is not reflected yet, try again in a moment.
+          </Typography>
+        </Box>
+        <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Button variant="contained" href="/training">
+            Go to Training
+          </Button>
+          <Button variant="outlined" href="/dashboard">
             Back to Dashboard
           </Button>
-          <Button variant="outlined" href="/questionnaire">
+          <Button variant="text" href="/questionnaire">
             Retake Assessment
           </Button>
         </Box>

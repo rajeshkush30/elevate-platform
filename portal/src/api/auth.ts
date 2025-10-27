@@ -149,6 +149,11 @@ export const resetPassword = async (token: string, newPassword: string): Promise
   await api.post(`/reset-password`, null, { params: { token, newPassword } });
 };
 
+// Public activation endpoint (Zoho invite flow)
+export const activateAccount = async (token: string, newPassword: string): Promise<void> => {
+  await axios.post(`/api/public/account/activate`, { token, newPassword });
+};
+
 export const verifyEmail = async (token: string): Promise<boolean> => {
   const response = await axios.get(`${API_URL}/verify-email?token=${token}`);
   return response.data;

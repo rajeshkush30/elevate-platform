@@ -13,7 +13,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { resetPassword } from '../api/auth';
+import { activateAccount } from '../api/auth';
 import { useToast } from '../components/ToastProvider';
 
 const validationSchema = Yup.object({
@@ -54,7 +54,8 @@ const ResetPassword = () => {
     onSubmit: async (values) => {
       try {
         setError('');
-        await resetPassword(token, values.newPassword);
+        // Use public activation API for invite-based activation
+        await activateAccount(token, values.newPassword);
         setSuccess(true);
         showToast('Password reset successful', 'success');
         // Redirect to login after 3 seconds
