@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Container, Card, CardContent, Typography, Stack, Button, Alert, CircularProgress } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { getAssignedTree, startStage, completeStage, type AssignedTree } from '../api/training';
 import { useToast } from '../components/ToastProvider';
 
 const Training = () => {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [tree, setTree] = useState<AssignedTree>([]);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +85,7 @@ const Training = () => {
                 <Stack direction="row" spacing={1}>
                   <Button variant="contained" onClick={() => onStart(s.id)} disabled={starting === s.id}>Start</Button>
                   <Button variant="outlined" onClick={() => onComplete(s.id)}>Complete</Button>
+                  <Button variant="text" onClick={() => navigate(`/training/stage/${s.id}`)}>Open Course (Demo)</Button>
                 </Stack>
               </Stack>
             </CardContent>

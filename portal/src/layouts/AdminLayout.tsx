@@ -17,13 +17,14 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import GroupIcon from '@mui/icons-material/Group';
+import MenuIcon from '@mui/icons-material/Menu';
 import CategoryIcon from '@mui/icons-material/Category';
 import QuizIcon from '@mui/icons-material/Quiz';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import SchoolIcon from '@mui/icons-material/School';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -62,6 +63,12 @@ const AdminLayout = () => {
           <ListItemButton component={RouterLink} to="/admin/catalog">
             <ListItemIcon><CategoryIcon /></ListItemIcon>
             <ListItemText primary="Catalog" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/admin/lms">
+            <ListItemIcon><SchoolIcon /></ListItemIcon>
+            <ListItemText primary="LMS" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>

@@ -95,14 +95,14 @@ dist/
 *.jks
 *.p12
 *.pem
-*.crt
-*.key
-
 # Application specific (track application*.yml/yaml/properties in repo)
-# Previously ignored; now allowed so we can commit profile configs (do not commit secrets)
+# Previous ignored; now allowed so we can commit profile configs (do not commit secrets)
 
 # Frontend build directories
 admin/dist/
 admin/build/
 portal/dist/
 portal/build/
+
+# Properties files (do not commit any .properties)
+*.properties

@@ -85,8 +85,6 @@ HELP.md
 *.code-workspace
 
 # Maven wrapper
-.mvn/wrapper/maven-wrapper.jar
-
 # Application logs and reports
 **/logs/
 **/reports/
@@ -97,3 +95,6 @@ HELP.md
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Spring Boot application properties
+src/main/resources/application.properties

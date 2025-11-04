@@ -1,0 +1,11 @@
+package com.elevate.consultingplatform.repository.lms;
+
+import com.elevate.consultingplatform.entity.lms.Lesson;
+import com.elevate.consultingplatform.entity.lms.Quiz;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface QuizRepository extends JpaRepository<Quiz, Long> {
+    Optional<Quiz> findByLesson(Lesson lesson);
+}

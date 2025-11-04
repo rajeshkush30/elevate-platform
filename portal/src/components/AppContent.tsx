@@ -28,11 +28,13 @@ import AdminCatalog from '../pages/AdminCatalog';
 import AdminAssessmentWizard from '../pages/AdminAssessmentWizard';
 import AdminQuestionnaires from '../pages/AdminQuestionnaires';
 import AdminQuestionsManager from '../pages/AdminQuestionsManager';
+import AdminLMS from '../pages/AdminLMS';
 import MyAssessments from '../pages/MyAssessments';
 import ClientAssessmentFill from '../pages/ClientAssessmentFill';
 import AssessmentResult from '../pages/AssessmentResult';
 import AdminAIPrompts from '../pages/AdminAIPrompts';
 import Chat from '../pages/Chat';
+import CourseViewer from '../pages/CourseViewer';
 
 const AppContent = () => {
   const { loading } = useAuth();
@@ -82,6 +84,7 @@ const AppContent = () => {
         <Route path="assignments" element={<AdminAssignmentsList />} />
         <Route path="assignments/create" element={<AdminAssignmentsCreate />} />
         <Route path="catalog" element={<AdminCatalog />} />
+        <Route path="lms" element={<AdminLMS />} />
         <Route path="questionnaires" element={<AdminQuestionnaires />} />
         <Route path="questionnaires/:questionnaireId/questions" element={<AdminQuestionsManager />} />
         <Route path="assessment-wizard" element={<AdminAssessmentWizard />} />
@@ -93,6 +96,7 @@ const AppContent = () => {
       <Route path="/assessment/result/:clientAssessmentId" element={<ProtectedRoute><AssessmentResult /></ProtectedRoute>} />
       <Route path="/assessment/history" element={<ProtectedRoute><AssessmentHistory /></ProtectedRoute>} />
       <Route path="/training" element={<ProtectedRoute><Training /></ProtectedRoute>} />
+      <Route path="/training/stage/:stageId" element={<ProtectedRoute><CourseViewer /></ProtectedRoute>} />
       <Route path="/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
       <Route path="/consult" element={<ProtectedRoute><Consultation /></ProtectedRoute>} />
     </Routes>
