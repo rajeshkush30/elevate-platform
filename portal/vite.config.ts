@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 3001,
     proxy: {
       '/api': {
         // Point this to your Spring Boot port. 403 with "Stapler crumb" means you're hitting Jenkins on 8080.
