@@ -35,6 +35,7 @@ import AssessmentResult from '../pages/AssessmentResult';
 import AdminAIPrompts from '../pages/AdminAIPrompts';
 import Chat from '../pages/Chat';
 import CourseViewer from '../pages/CourseViewer';
+import ActivateAccount from '../pages/ActivateAccount';
 
 const AppContent = () => {
   const { loading } = useAuth();
@@ -67,6 +68,7 @@ const AppContent = () => {
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/activate-account" element={<ActivateAccount />} />
       {/* Chat should be accessible to everyone; do not wrap in PublicRoute */}
       <Route path="/chat" element={<Chat />} />
 
