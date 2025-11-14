@@ -34,6 +34,8 @@ public class SecurityConfig {
         "/api/v1/auth/**",
         "/api/v1/chat/lead-intake",
         "/api/chat/lead-intake",
+            "/api/zoho/**",
+            "/api/v1/admin/**",
         "/api/public/**",
         "/v3/api-docs/**",
         "/swagger-ui/**",

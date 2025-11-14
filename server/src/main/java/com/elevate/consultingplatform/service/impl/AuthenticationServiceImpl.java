@@ -84,7 +84,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         .email(adminEmail)
                         .password(passwordEncoder.encode(adminPassword))
                         .role(Role.ADMIN)
-                        //.isActive(true)  // This is required for login
+                        .isActive(true)  // This is required for login
                         .isEmailVerified(true)
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())

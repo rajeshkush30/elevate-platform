@@ -2,6 +2,7 @@ package com.elevate.consultingplatform.entity.catalog;
 
 import com.elevate.consultingplatform.common.HierarchyNode;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -22,7 +23,7 @@ import java.util.List;
 public class Module extends HierarchyNode {
 
     @Builder.Default
-    @OneToMany(mappedBy = "module")
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("module-segment")
     private List<Segment> segments = new ArrayList<>();
 }

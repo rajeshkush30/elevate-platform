@@ -1,5 +1,6 @@
 package com.elevate.consultingplatform.service.impl;
 
+import com.elevate.consultingplatform.entity.zoholeads.Lead;
 import com.elevate.consultingplatform.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -73,4 +74,25 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Failed to send email", e);
         }
     }
+
+    @Override
+    @Async
+    public void sendApprovedEmail(Lead lead) {
+        Context context = new Context();
+        context.setVariable("name", lead.getFirstName());
+        context.setVariable("status", "Approved");
+        String content = templateEngine.process("email/zoho-approved", context);
+        sendEmail(lead.getEmail(), "Your Lead Has Been Approved", content);
+    }
+
+    @Override
+    @Async
+    public void sendRejectedEmail(Lead lead) {
+        Context context = new Context();
+        context.setVariable("name", lead.getFirstName());
+        context.setVariable("status", "Rejected");
+        String content = templateEngine.process("email/zoho-rejected", context);
+        sendEmail(lead.getEmail(), "Your Lead Has Been Rejected", content);
+    }
+
 }

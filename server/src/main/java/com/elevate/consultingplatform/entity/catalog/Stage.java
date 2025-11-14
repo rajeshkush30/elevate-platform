@@ -47,7 +47,7 @@ public class Stage extends HierarchyNode {
     @Column(name = "metadata", columnDefinition = "TEXT")
     private String metadata; // extra JSON, future-proofing
 
-    @OneToMany(mappedBy = "stage")
+    @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonManagedReference("stage-assessment")
     private List<Assessment> assessments = new ArrayList<>();

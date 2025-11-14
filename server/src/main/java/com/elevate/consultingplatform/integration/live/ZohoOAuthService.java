@@ -1,6 +1,6 @@
 package com.elevate.consultingplatform.integration.live;
 
-import com.elevate.consultingplatform.config.ZohoCrmProperties;
+import com.elevate.consultingplatform.config.ZohoConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @RequiredArgsConstructor
 public class ZohoOAuthService {
 
-    private final ZohoCrmProperties props;
+    private final ZohoConfig zohoConfig;
     private final RestTemplateBuilder builder;
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -34,8 +34,8 @@ public class ZohoOAuthService {
 
     private RestTemplate restTemplate() {
         return builder
-                .setConnectTimeout(Duration.ofMillis(props.getHttpConnectTimeoutMs()))
-                .setReadTimeout(Duration.ofMillis(props.getHttpReadTimeoutMs()))
+                .setConnectTimeout(Duration.ofMillis(zohoConfig.getHttpConnectTimeoutMs()))
+                .setReadTimeout(Duration.ofMillis(zohoConfig.getHttpReadTimeoutMs()))
                 .build();
     }
 
@@ -56,16 +56,16 @@ public class ZohoOAuthService {
         lock.lock();
         try {
             if (!force && cachedToken != null && Instant.now().isBefore(expiresAt.minusSeconds(60))) return;
-            String accounts = props.getAccountsBaseUrl();
+            String accounts = zohoConfig.getAccountsUrl();
             String url = accounts + "/oauth/v2/token";
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
             form.add("grant_type", "refresh_token");
-            form.add("client_id", props.getClientId());
-            form.add("client_secret", props.getClientSecret());
-            form.add("refresh_token", props.getRefreshToken());
+            form.add("client_id", zohoConfig.getClientId());
+            form.add("client_secret", zohoConfig.getClientSecret());
+            form.add("refresh_token", zohoConfig.getRefreshToken());
 
             ResponseEntity<String> resp = restTemplate().postForEntity(url, new HttpEntity<>(form, headers), String.class);
             JsonNode node = mapper.readTree(resp.getBody());

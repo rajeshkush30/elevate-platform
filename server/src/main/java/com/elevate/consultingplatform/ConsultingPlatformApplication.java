@@ -26,7 +26,7 @@ public class ConsultingPlatformApplication {
                                   StageRepository stageRepository,
                                   StageRuleRepository stageRuleRepository) {
         return args -> {
-            if (moduleRepository.count() > 0) return; // already seeded
+            if (moduleRepository.count() > 0) return;
 
             // Module
             Module m = Module.builder().build();

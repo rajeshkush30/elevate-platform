@@ -25,7 +25,7 @@ public class Segment extends HierarchyNode {
     private Module module;
 
     @Builder.Default
-    @OneToMany(mappedBy = "segment")
+    @OneToMany(mappedBy = "segment", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("segment-stage")
     private List<Stage> stages = new ArrayList<>();
 }

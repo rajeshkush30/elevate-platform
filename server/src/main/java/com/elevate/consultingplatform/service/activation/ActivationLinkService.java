@@ -4,6 +4,7 @@ import com.elevate.consultingplatform.entity.AccountStatus;
 import com.elevate.consultingplatform.entity.Role;
 import com.elevate.consultingplatform.entity.User;
 import com.elevate.consultingplatform.repository.UserRepository;
+import com.elevate.consultingplatform.repository.zoholeads.LeadRepository;
 import com.elevate.consultingplatform.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ public class ActivationLinkService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final LeadRepository leadRepository;
     @Value("${app.client.base-url:http://localhost:3000}")
     private String clientBaseUrl;
 
@@ -41,14 +42,16 @@ public class ActivationLinkService {
      */
     public String buildActivationLink(String email, String contactId) {
         // Upsert user with PENDING status and CLIENT role
-        var existing = userRepository.findByEmail(email).orElse(null);
-        if (existing == null) {
-            String[] parts = email.split("@", 2);
-            String first = parts.length > 0 ? parts[0] : "User";
-            User user = User.builder()
-                    .firstName(first)
-                    .lastName("")
+        var existing = leadRepository.findByZohoLeadId(contactId)
+                .orElseThrow(() -> new RuntimeException("Lead not approved or not found for contactId: " + contactId));
+
+
+
+        User user = User.builder()
+                    .firstName(existing.getFirstName())
+                    .lastName(existing.getLastName())
                     .email(email)
+                    .phoneNumber(existing.getPhone())
                     .password(passwordEncoder.encode(UUID.randomUUID().toString())) // temp password
                     .role(Role.CLIENT)
                     .isEmailVerified(false)
@@ -57,17 +60,14 @@ public class ActivationLinkService {
                     .build();
             userRepository.save(user);
             log.info("[ActivationLinkService] Created pending CLIENT user for {} (contactId={})", email, contactId);
-        } else {
-            log.info("[ActivationLinkService] Found existing user for {} (accountStatus={})", email, existing.getAccountStatus());
-        }
+
 
         // Build a short-lived token using JwtService (subject = email)
         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_CLIENT"));
         UserDetails principal = new org.springframework.security.core.userdetails.User(email, "", authorities);
         String token = jwtService.generateToken(principal);
 
-        String url = clientBaseUrl + "/reset-password?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8)
-                + "&email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
+        String url = clientBaseUrl + "/activate-account?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
         log.info("[ActivationLinkService] Activation URL generated for {} -> {}", email, url);
         return url;
     }
