@@ -29,23 +29,25 @@ export async function getModuleTree(): Promise<ModuleTreeNode[]> {
 }
 
 // Modules
-export async function createModule(payload: { name: string }): Promise<void> {
-  await http.post('/api/v1/admin/modules', payload);
+export async function createModule(payload: { name: string; description?: string; isActive?: boolean }): Promise<void> {
+  const body: any = { ...payload };
+  await http.post('/api/v1/admin/modules', body);
 }
-export async function updateModule(id: string, payload: { name: string }): Promise<void> {
-  await http.put(`/api/v1/admin/modules/${id}`, payload);
+export async function updateModule(id: string, payload: { name: string; description?: string; isActive?: boolean }): Promise<void> {
+  const body: any = { ...payload };
+  await http.put(`/api/v1/admin/modules/${id}`, body);
 }
 export async function deleteModule(id: string): Promise<void> {
   await http.delete(`/api/v1/admin/modules/${id}`);
 }
 
 // Segments
-export async function createSegment(payload: { name: string; moduleId?: string }): Promise<void> {
+export async function createSegment(payload: { name: string; moduleId: string; description?: string; isActive?: boolean }): Promise<void> {
   const body: any = { ...payload };
   if (body.moduleId != null && body.moduleId !== '') body.moduleId = Number(body.moduleId);
   await http.post('/api/v1/admin/segments', body);
 }
-export async function updateSegment(id: string, payload: { name: string; moduleId?: string }): Promise<void> {
+export async function updateSegment(id: string, payload: { name: string; moduleId?: string; description?: string; isActive?: boolean }): Promise<void> {
   const body: any = { ...payload };
   if (body.moduleId != null && body.moduleId !== '') body.moduleId = Number(body.moduleId);
   await http.put(`/api/v1/admin/segments/${id}`, body);
@@ -56,12 +58,12 @@ export async function deleteSegment(id: string): Promise<void> {
 
 // Stages
 export type StageType = 'TRAINING' | 'ASSESSMENT' | 'CONSULTATION' | 'SUMMARY';
-export async function createStage(payload: { name: string; segmentId: string; type: StageType; description?: string }): Promise<void> {
+export async function createStage(payload: { name: string; segmentId: string; type: StageType; description?: string; contentUrl?: string; lmsCourseId?: string; aiPromptTemplate?: string; durationMinutes?: number; isActive?: boolean }): Promise<void> {
   const body: any = { ...payload };
   body.segmentId = Number(body.segmentId);
   await http.post('/api/v1/admin/stages', body);
 }
-export async function updateStage(id: string, payload: { name?: string; segmentId?: string; type?: StageType; description?: string }): Promise<void> {
+export async function updateStage(id: string, payload: { name?: string; segmentId?: string; type?: StageType; description?: string; contentUrl?: string; lmsCourseId?: string; aiPromptTemplate?: string; durationMinutes?: number; isActive?: boolean }): Promise<void> {
   const body: any = { ...payload };
   if (body.segmentId != null && body.segmentId !== '') body.segmentId = Number(body.segmentId);
   await http.put(`/api/v1/admin/stages/${id}`, body);
