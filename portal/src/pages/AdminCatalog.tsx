@@ -33,9 +33,9 @@ const AdminCatalog = () => {
   const [confirm, setConfirm] = useState<{ open: boolean; type?: 'module'|'segment'|'stage'|'assessment'; id?: string; name?: string }>({ open: false });
 
   // simple forms
-  const [moduleForm, setModuleForm] = useState({ id: '', name: '' });
-  const [segmentForm, setSegmentForm] = useState({ id: '', name: '', moduleId: '' });
-  const [stageForm, setStageForm] = useState({ id: '', name: '', moduleId: '', segmentId: '', type: '' as '' | StageType });
+  const [moduleForm, setModuleForm] = useState({ id: '', name: '', description: '', isActive: true });
+  const [segmentForm, setSegmentForm] = useState({ id: '', name: '', moduleId: '', description: '', isActive: true });
+  const [stageForm, setStageForm] = useState({ id: '', name: '', moduleId: '', segmentId: '', type: '' as '' | StageType, description: '', contentUrl: '', lmsCourseId: '', aiPromptTemplate: '', durationMinutes: '' as number | '' , isActive: true });
   const [moduleTouched, setModuleTouched] = useState(false);
   const [segmentTouched, setSegmentTouched] = useState(false);
   const [stageTouched, setStageTouched] = useState(false);
@@ -155,15 +155,15 @@ const AdminCatalog = () => {
         return;
       }
       if (moduleForm.id) {
-        await updateModule(moduleForm.id, { name: moduleForm.name });
+        await updateModule(moduleForm.id, { name: moduleForm.name, description: moduleForm.description || undefined, isActive: moduleForm.isActive });
         showToast('Module updated', 'success');
       } else {
-        await createModule({ name: moduleForm.name });
+        await createModule({ name: moduleForm.name, description: moduleForm.description || undefined, isActive: moduleForm.isActive });
         showToast('Module created', 'success');
       }
 
       // Reset form and reload data
-      setModuleForm({ id: '', name: '' });
+      setModuleForm({ id: '', name: '', description: '', isActive: true });
       await load();
     } catch (error) {
       console.error('Error saving module:', error);
@@ -185,13 +185,13 @@ const AdminCatalog = () => {
         return;
       }
       if (segmentForm.id) {
-        await updateSegment(segmentForm.id, { name: segmentForm.name, moduleId: segmentForm.moduleId || undefined });
+        await updateSegment(segmentForm.id, { name: segmentForm.name, moduleId: segmentForm.moduleId || undefined, description: segmentForm.description || undefined, isActive: segmentForm.isActive });
         showToast('Segment updated', 'success');
       } else {
-        await createSegment({ name: segmentForm.name, moduleId: segmentForm.moduleId });
+        await createSegment({ name: segmentForm.name, moduleId: segmentForm.moduleId, description: segmentForm.description || undefined, isActive: segmentForm.isActive });
         showToast('Segment created', 'success');
       }
-      setSegmentForm({ id: '', name: '', moduleId: '' });
+      setSegmentForm({ id: '', name: '', moduleId: '', description: '', isActive: true });
       await load();
     } catch { showToast('Save failed', 'error'); }
   };
@@ -202,13 +202,13 @@ const AdminCatalog = () => {
       if (!stageForm.segmentId) { showToast('Select a Segment for this Stage', 'warning'); return; }
       if (!stageForm.id && !stageForm.type) { showToast('Select Stage Type', 'warning'); return; }
       if (stageForm.id) {
-        await updateStage(stageForm.id, { name: stageForm.name, segmentId: stageForm.segmentId || undefined, type: stageForm.type || undefined });
+        await updateStage(stageForm.id, { name: stageForm.name, segmentId: stageForm.segmentId || undefined, type: stageForm.type || undefined, description: stageForm.description || undefined, contentUrl: stageForm.contentUrl || undefined, lmsCourseId: stageForm.lmsCourseId || undefined, aiPromptTemplate: stageForm.aiPromptTemplate || undefined, durationMinutes: stageForm.durationMinutes === '' ? undefined : Number(stageForm.durationMinutes), isActive: stageForm.isActive });
         showToast('Stage updated', 'success');
       } else {
-        await createStage({ name: stageForm.name, segmentId: stageForm.segmentId, type: stageForm.type as StageType });
+        await createStage({ name: stageForm.name, segmentId: stageForm.segmentId, type: stageForm.type as StageType, description: stageForm.description || undefined, contentUrl: stageForm.contentUrl || undefined, lmsCourseId: stageForm.lmsCourseId || undefined, aiPromptTemplate: stageForm.aiPromptTemplate || undefined, durationMinutes: stageForm.durationMinutes === '' ? undefined : Number(stageForm.durationMinutes), isActive: stageForm.isActive });
         showToast('Stage created', 'success');
       }
-      setStageForm({ id: '', name: '', moduleId: '', segmentId: '', type: '' });
+      setStageForm({ id: '', name: '', moduleId: '', segmentId: '', type: '', description: '', contentUrl: '', lmsCourseId: '', aiPromptTemplate: '', durationMinutes: '', isActive: true });
       await load();
     } catch { showToast('Save failed', 'error'); }
   };
@@ -347,66 +347,84 @@ const AdminCatalog = () => {
           <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }} elevation={2}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }} gutterBottom>{moduleForm.id ? 'Edit Module' : 'Create Module'}</Typography>
             <Divider sx={{ mb: 1 }} />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <TextField size="small" label="Name" value={moduleForm.name} onChange={(e) => setModuleForm({ ...moduleForm, name: e.target.value })} onBlur={()=>setModuleTouched(true)} error={moduleTouched && !moduleForm.name.trim()} helperText={moduleTouched && !moduleForm.name.trim() ? 'Name is required' : ''} fullWidth />
-              <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={submitModule} disabled={!moduleForm.name.trim()}>{moduleForm.id ? 'Update' : 'Create'}</Button>
-              {moduleForm.id && <Button variant="text" onClick={() => setModuleForm({ id: '', name: '' })}>Cancel</Button>}
+            <Stack spacing={1.5}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <TextField size="small" label="Name" value={moduleForm.name} onChange={(e) => setModuleForm({ ...moduleForm, name: e.target.value })} onBlur={()=>setModuleTouched(true)} error={moduleTouched && !moduleForm.name.trim()} helperText={moduleTouched && !moduleForm.name.trim() ? 'Name is required' : ''} fullWidth />
+                <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={submitModule} disabled={!moduleForm.name.trim()}>{moduleForm.id ? 'Update' : 'Create'}</Button>
+                {moduleForm.id && <Button variant="text" onClick={() => setModuleForm({ id: '', name: '', description: '', isActive: true })}>Cancel</Button>}
+              </Stack>
+              <TextField size="small" label="Description" value={moduleForm.description} onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })} fullWidth multiline minRows={2} />
+              <FormControlLabel control={<Checkbox checked={moduleForm.isActive} onChange={(e)=> setModuleForm({ ...moduleForm, isActive: e.target.checked })} />} label="Active" />
             </Stack>
           </Paper>
           <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }} elevation={2}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }} gutterBottom>{segmentForm.id ? 'Edit Segment' : 'Create Segment'}</Typography>
             <Divider sx={{ mb: 1 }} />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <TextField size="small" label="Name" value={segmentForm.name} onChange={(e) => setSegmentForm({ ...segmentForm, name: e.target.value })} onBlur={()=>setSegmentTouched(true)} error={segmentTouched && !segmentForm.name.trim()} helperText={segmentTouched && !segmentForm.name.trim() ? 'Name is required' : ''} fullWidth />
-              <TextField
-                select
-                label="Module"
-                value={segmentForm.moduleId || ''}
-                onChange={(e) => setSegmentForm({...segmentForm, moduleId: e.target.value})}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-                required
-                error={!segmentForm.moduleId}
-                helperText={!segmentForm.moduleId ? 'Please select a module' : ''}
-              >
-                <MenuItem value="">Select module</MenuItem>
-                {moduleOptions.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>)}
-              </TextField>
-              {/* Reorder for segments is available in the Structure list above */}
-              <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={submitSegment} disabled={!segmentForm.moduleId || !segmentForm.name.trim()}>
-                {segmentForm.id ? 'Update' : 'Create'}
-              </Button>
-              {segmentForm.id && (
-                <Button variant="text" onClick={() => setSegmentForm({ id: '', name: '', moduleId: '' })}>
-                  Cancel
+            <Stack spacing={1.5}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <TextField size="small" label="Name" value={segmentForm.name} onChange={(e) => setSegmentForm({ ...segmentForm, name: e.target.value })} onBlur={()=>setSegmentTouched(true)} error={segmentTouched && !segmentForm.name.trim()} helperText={segmentTouched && !segmentForm.name.trim() ? 'Name is required' : ''} fullWidth />
+                <TextField
+                  select
+                  label="Module"
+                  value={segmentForm.moduleId || ''}
+                  onChange={(e) => setSegmentForm({...segmentForm, moduleId: e.target.value})}
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                  required
+                  error={!segmentForm.moduleId}
+                  helperText={!segmentForm.moduleId ? 'Please select a module' : ''}
+                >
+                  <MenuItem value="">Select module</MenuItem>
+                  {moduleOptions.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>)}
+                </TextField>
+                {/* Reorder for segments is available in the Structure list above */}
+                <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={submitSegment} disabled={!segmentForm.moduleId || !segmentForm.name.trim()}>
+                  {segmentForm.id ? 'Update' : 'Create'}
                 </Button>
-              )}
+                {segmentForm.id && (
+                  <Button variant="text" onClick={() => setSegmentForm({ id: '', name: '', moduleId: '', description: '', isActive: true })}>
+                    Cancel
+                  </Button>
+                )}
+              </Stack>
+              <TextField size="small" label="Description" value={segmentForm.description} onChange={(e) => setSegmentForm({ ...segmentForm, description: e.target.value })} fullWidth multiline minRows={2} />
+              <FormControlLabel control={<Checkbox checked={segmentForm.isActive} onChange={(e)=> setSegmentForm({ ...segmentForm, isActive: e.target.checked })} />} label="Active" />
             </Stack>
           </Paper>
 
           <Paper sx={{ p: 2, mt: 2, borderRadius: 2, overflow: 'visible' }} elevation={2}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }} gutterBottom>{stageForm.id ? 'Edit Stage' : 'Create Stage'}</Typography>
             <Divider sx={{ mb: 1 }} />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
-              <TextField size="small" label="Name" value={stageForm.name} onChange={(e) => setStageForm({ ...stageForm, name: e.target.value })} onBlur={()=>setStageTouched(true)} error={stageTouched && !stageForm.name.trim()} helperText={stageTouched && !stageForm.name.trim() ? 'Name is required' : ''} fullWidth sx={{ flex: 1, minWidth: { xs: '100%', sm: 260 } }} />
-              <TextField size="small" select label="Module" value={stageForm.moduleId} onChange={(e) => { setStageForm({ ...stageForm, moduleId: e.target.value, segmentId: '' }); }} sx={{ minWidth: 220, flexShrink: 0 }}>
-                <MenuItem value="">Select module</MenuItem>
-                {moduleOptions.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>)}
-              </TextField>
-              <TextField size="small" select label="Segment" value={stageForm.segmentId} onChange={(e) => setStageForm({ ...stageForm, segmentId: e.target.value })} sx={{ minWidth: 220, flexShrink: 0 }}>
-                <MenuItem value="">Select segment</MenuItem>
-                {segmentOptionsFor(stageForm.moduleId).map(s => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
-              </TextField>
-              <TextField size="small" select label="Type" value={stageForm.type} onChange={(e) => setStageForm({ ...stageForm, type: e.target.value as StageType })} sx={{ minWidth: 200, flexShrink: 0 }}>
-                <MenuItem value="">Select type</MenuItem>
-                <MenuItem value="TRAINING">TRAINING</MenuItem>
-                <MenuItem value="ASSESSMENT">ASSESSMENT</MenuItem>
-                <MenuItem value="CONSULTATION">CONSULTATION</MenuItem>
-                <MenuItem value="SUMMARY">SUMMARY</MenuItem>
-              </TextField>
-              <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={submitStage} disabled={!stageForm.name.trim() || !stageForm.segmentId || (!stageForm.id && !stageForm.type)} sx={{ flexShrink: 0 }}>{stageForm.id ? 'Update' : 'Create'}</Button>
-              {stageForm.id && <Button variant="text" onClick={() => setStageForm({ id: '', name: '', moduleId: '', segmentId: '', type: '' })}>Cancel</Button>}
+            <Stack spacing={1.5}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
+                <TextField size="small" label="Name" value={stageForm.name} onChange={(e) => setStageForm({ ...stageForm, name: e.target.value })} onBlur={()=>setStageTouched(true)} error={stageTouched && !stageForm.name.trim()} helperText={stageTouched && !stageForm.name.trim() ? 'Name is required' : ''} fullWidth sx={{ flex: 1, minWidth: { xs: '100%', sm: 260 } }} />
+                <TextField size="small" select label="Module" value={stageForm.moduleId} onChange={(e) => { setStageForm({ ...stageForm, moduleId: e.target.value, segmentId: '' }); }} sx={{ minWidth: 220, flexShrink: 0 }}>
+                  <MenuItem value="">Select module</MenuItem>
+                  {moduleOptions.map(m => <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>)}
+                </TextField>
+                <TextField size="small" select label="Segment" value={stageForm.segmentId} onChange={(e) => setStageForm({ ...stageForm, segmentId: e.target.value })} sx={{ minWidth: 220, flexShrink: 0 }}>
+                  <MenuItem value="">Select segment</MenuItem>
+                  {segmentOptionsFor(stageForm.moduleId).map(s => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
+                </TextField>
+                <TextField size="small" select label="Type" value={stageForm.type} onChange={(e) => setStageForm({ ...stageForm, type: e.target.value as StageType })} sx={{ minWidth: 200, flexShrink: 0 }}>
+                  <MenuItem value="">Select type</MenuItem>
+                  <MenuItem value="TRAINING">TRAINING</MenuItem>
+                  <MenuItem value="ASSESSMENT">ASSESSMENT</MenuItem>
+                  <MenuItem value="CONSULTATION">CONSULTATION</MenuItem>
+                  <MenuItem value="SUMMARY">SUMMARY</MenuItem>
+                </TextField>
+                <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={submitStage} disabled={!stageForm.name.trim() || !stageForm.segmentId || (!stageForm.id && !stageForm.type)} sx={{ flexShrink: 0 }}>{stageForm.id ? 'Update' : 'Create'}</Button>
+                {stageForm.id && <Button variant="text" onClick={() => setStageForm({ id: '', name: '', moduleId: '', segmentId: '', type: '', description: '', contentUrl: '', lmsCourseId: '', aiPromptTemplate: '', durationMinutes: '', isActive: true })}>Cancel</Button>}
+              </Stack>
+              <TextField size="small" label="Description" value={stageForm.description} onChange={(e) => setStageForm({ ...stageForm, description: e.target.value })} fullWidth multiline minRows={2} />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <TextField size="small" label="Content URL" value={stageForm.contentUrl} onChange={(e) => setStageForm({ ...stageForm, contentUrl: e.target.value })} fullWidth />
+                <TextField size="small" label="LMS Course ID" value={stageForm.lmsCourseId} onChange={(e) => setStageForm({ ...stageForm, lmsCourseId: e.target.value })} fullWidth />
+                <TextField size="small" label="Duration (minutes)" type="number" value={stageForm.durationMinutes} onChange={(e) => setStageForm({ ...stageForm, durationMinutes: e.target.value === '' ? '' : Number(e.target.value) })} sx={{ maxWidth: 220 }} />
+              </Stack>
+              <TextField size="small" label="AI Prompt Template" value={stageForm.aiPromptTemplate} onChange={(e) => setStageForm({ ...stageForm, aiPromptTemplate: e.target.value })} fullWidth multiline minRows={3} />
+              <FormControlLabel control={<Checkbox checked={stageForm.isActive} onChange={(e)=> setStageForm({ ...stageForm, isActive: e.target.checked })} />} label={`Active ${stageForm.type ? `(${stageForm.type})` : ''}`} />
             </Stack>
           </Paper>
 
