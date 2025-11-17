@@ -1,0 +1,63 @@
+package com.elevate.consultingplatform.controller.publicapi;
+
+import jakarta.annotation.security.PermitAll;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.*;
+
+@RestController
+@RequestMapping("/api/public/chat")
+@RequiredArgsConstructor
+public class LeadIntakeController {
+
+    @PostMapping("/intents")
+    @PermitAll
+    public ResponseEntity<LeadIntakeResponse> leadIntake(@RequestBody LeadIntakeRequest req) {
+        // Simple heuristic mock: derive labels and stage hint
+        List<String> labels = new ArrayList<>();
+        if (req.getIntents() != null) {
+            for (String it : req.getIntents()) {
+                if (it == null) continue;
+                String t = it.trim().toLowerCase(Locale.ROOT);
+                if (t.contains("fund") || t.contains("capital")) labels.add("Capital");
+                if (t.contains("sale") || t.contains("pipeline")) labels.add("Sales");
+                if (t.contains("process") || t.contains("ops") || t.contains("operation")) labels.add("Operations");
+            }
+        }
+        if (labels.isEmpty()) labels = List.of("General");
+
+        String stage = "EARLY";
+        if (labels.contains("Sales")) stage = "GROWTH";
+        if (labels.contains("Operations")) stage = "MATURE";
+
+        LeadIntakeResponse resp = new LeadIntakeResponse();
+        resp.setLeadId(UUID.randomUUID().toString());
+        resp.setPreScore(50.0);
+        resp.setStageHint(stage);
+        resp.setRationale("Heuristic classification based on provided intents and notes.");
+        resp.setLabels(labels);
+        return ResponseEntity.ok(resp);
+    }
+
+    @Data
+    public static class LeadIntakeRequest {
+        private String name;
+        private String email;
+        private String company;
+        private Map<String, Object> profile;
+        private List<String> intents;
+        private String notes;
+    }
+
+    @Data
+    public static class LeadIntakeResponse {
+        private String leadId;
+        private Double preScore;
+        private String stageHint;
+        private String rationale;
+        private List<String> labels;
+    }
+}
