@@ -25,6 +25,6 @@ public class StrategySubmission extends BaseEntity {
 
     // Raw JSON payload of answers submitted from client
     @Lob
-    @Column(name = "payload", columnDefinition = "LONGTEXT")
+    @Column(name = "payload", columnDefinition = "TEXT")
     private String payload;
 }
