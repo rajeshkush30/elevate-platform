@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -37,48 +38,54 @@ public class AdminSubmissionsController {
             @RequestParam(name = "from", required = false) String from,
             @RequestParam(name = "to", required = false) String to
     ) {
-        // Build sort
+        // Build sort and pageable
         String[] sortParts = sort.split(",");
         Sort.Direction dir = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sortObj = Sort.by(dir, sortParts[0]);
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), sortObj);
+        String sortProp = sortParts[0];
+        // allow only safe sort properties
+        Set<String> allowedSort = Set.of("createdAt", "updatedAt", "score", "stage", "status", "id");
+        if (!allowedSort.contains(sortProp)) sortProp = "createdAt";
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(dir, sortProp));
 
-        // Load page then filter in-memory (simple MVP)
-        Page<ClientAssessment> pageData = clientAssessmentRepository.findAll(pageable);
-        List<ClientAssessment> filtered = new ArrayList<>(pageData.getContent());
-
+        // Build specification
+        Specification<ClientAssessment> spec = Specification.where(null);
         if (query != null && !query.isBlank()) {
-            String q = query.toLowerCase(Locale.ROOT);
-            filtered = filtered.stream().filter(ca -> {
-                String name = Optional.ofNullable(ca.getAssessment()).map(a -> a.getName()).orElse("");
-                String clientEmail = Optional.ofNullable(ca.getClient()).map(u -> u.getEmail()).orElse("");
-                return name.toLowerCase(Locale.ROOT).contains(q) || clientEmail.toLowerCase(Locale.ROOT).contains(q);
-            }).collect(Collectors.toList());
+            String q = query.trim().toLowerCase(Locale.ROOT);
+            String finalSortProp = sortProp; // capture for lambda
+            spec = spec.and((root, cq, cb) -> {
+                var assessmentJoin = root.join("assessment");
+                var clientJoin = root.join("client");
+                var nameLike = cb.like(cb.lower(assessmentJoin.get("name")), "%" + q + "%");
+                var emailLike = cb.like(cb.lower(clientJoin.get("email")), "%" + q + "%");
+                return cb.or(nameLike, emailLike);
+            });
         }
         if (stage != null && !stage.isBlank()) {
-            filtered = filtered.stream().filter(ca -> stage.equalsIgnoreCase(Objects.toString(ca.getStage(), ""))).collect(Collectors.toList());
+            String st = stage;
+            spec = spec.and((root, cq, cb) -> cb.equal(cb.lower(root.get("stage")), st.toLowerCase(Locale.ROOT)));
         }
         if (status != null && !status.isBlank()) {
-            filtered = filtered.stream().filter(ca -> status.equalsIgnoreCase(Objects.toString(ca.getStatus(), ""))).collect(Collectors.toList());
+            String st = status;
+            spec = spec.and((root, cq, cb) -> cb.equal(cb.lower(root.get("status")), st.toLowerCase(Locale.ROOT)));
         }
         OffsetDateTime fromTs = parseTime(from);
-        OffsetDateTime toTs = parseTime(to);
         if (fromTs != null) {
-            filtered = filtered.stream().filter(ca -> ca.getCreatedAt() != null && !ca.getCreatedAt().isBefore(fromTs.toLocalDateTime())).collect(Collectors.toList());
+            spec = spec.and((root, cq, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), fromTs.toLocalDateTime()));
         }
+        OffsetDateTime toTs = parseTime(to);
         if (toTs != null) {
-            filtered = filtered.stream().filter(ca -> ca.getCreatedAt() != null && !ca.getCreatedAt().isAfter(toTs.toLocalDateTime())).collect(Collectors.toList());
+            spec = spec.and((root, cq, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), toTs.toLocalDateTime()));
         }
 
-        List<Item> items = filtered.stream().map(AdminSubmissionsController::toItem).collect(Collectors.toList());
+        Page<ClientAssessment> pageData = clientAssessmentRepository.findAll(spec, pageable);
+        List<Item> items = pageData.getContent().stream().map(AdminSubmissionsController::toItem).collect(Collectors.toList());
 
-        // Compose response (retain requested paging size, but since we filtered in-memory, we return a single-page slice)
         PageResponse<Item> resp = new PageResponse<>();
         resp.setContent(items);
-        resp.setTotalElements(items.size());
-        resp.setTotalPages(1);
-        resp.setNumber(page);
-        resp.setSize(items.size());
+        resp.setTotalElements(pageData.getTotalElements());
+        resp.setTotalPages(pageData.getTotalPages());
+        resp.setNumber(pageData.getNumber());
+        resp.setSize(pageData.getSize());
         return ResponseEntity.ok(resp);
     }
 
