@@ -20,11 +20,11 @@ public class ConsultationDraft extends BaseEntity {
     private User user;
 
     @Lob
-    @Column(name = "draft", columnDefinition = "LONGTEXT")
+    @Column(name = "draft", columnDefinition = "TEXT")
     private String draft;
 
     @Lob
-    @Column(name = "sections", columnDefinition = "LONGTEXT")
+    @Column(name = "sections", columnDefinition = "TEXT")
     private String sectionsJson;
 
     @Column(name = "approved")
