@@ -11,8 +11,13 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
 
+import java.net.URI;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,17 +25,47 @@ import java.util.Map;
 @Service
 @Profile("live")
 @Slf4j
-    public class LiveAIClient implements AIClient {
+public class LiveAIClient implements AIClient {
 
-        private final WebClient client;
-        private final ObjectMapper mapper = new ObjectMapper();
+    private final WebClient client;
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    @Value("${openai.model:gpt-4o-mini}")
+    @Value("${openai.model:gpt-5.1}")
     private String model;
 
-    public LiveAIClient(@Value("${openai.apiKey:}") String apiKey,
+    public LiveAIClient(@Value("${openai.apiKey:${openai.api.key:}}") String apiKey,
                         WebClient.Builder builder) {
+        System.setProperty("io.netty.resolver.dns.useJdkResolver", "true");
+
+        HttpClient http = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(60));
+
+        String proxyEnv = System.getenv("HTTPS_PROXY");
+        if (proxyEnv == null || proxyEnv.isBlank()) {
+            proxyEnv = System.getenv("HTTP_PROXY");
+        }
+        if (proxyEnv != null && !proxyEnv.isBlank()) {
+            try {
+                URI p = URI.create(proxyEnv.trim());
+                int port = p.getPort() == -1 ? ("https".equalsIgnoreCase(p.getScheme()) ? 443 : 80) : p.getPort();
+                HttpClient finalHttp = http;
+                http = http.proxy(spec -> {
+                    ProxyProvider.Builder b = spec.type(ProxyProvider.Proxy.HTTP)
+                            .host(p.getHost())
+                            .port(port);
+                    String ui = p.getUserInfo();
+                    if (ui != null && !ui.isBlank()) {
+                        String[] parts = ui.split(":", 2);
+                        String u = parts[0];
+                        String pw = parts.length > 1 ? parts[1] : "";
+                        b.username(u).password(s -> pw);
+                    }
+                });
+            } catch (Exception ignored) { }
+        }
+
         this.client = builder
+                .clientConnector(new ReactorClientHttpConnector(http))
                 .baseUrl("https://api.openai.com/v1")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + (apiKey == null ? "" : apiKey.trim()))
                 .build();
@@ -101,13 +136,16 @@ import java.util.Map;
                 Map.of("role", "system", "content", system),
                 Map.of("role", "user", "content", safeJson(payload))
         );
-
-        JsonNode json = chatJson(messages);
-        String stage = json.path("stage").asText("StartUp");
-        double score = json.path("score").asDouble(0.0);
-        String rationale = json.path("rationale").asText("");
-        double confidence = json.path("confidence").asDouble(0.7);
-        return new StageResponse(stage, score, rationale, confidence);
+        try {
+            JsonNode json = chatJson(messages);
+            String stage = json.path("stage").asText("StartUp");
+            double score = json.path("score").asDouble(0.0);
+            String rationale = json.path("rationale").asText("");
+            double confidence = json.path("confidence").asDouble(0.7);
+            return new StageResponse(stage, score, rationale, confidence);
+        } catch (Exception e) {
+            return new StageResponse("Grow", 0.0, "AI unavailable - fallback applied", 0.0);
+        }
     }
 
     @Override
@@ -123,11 +161,14 @@ import java.util.Map;
                 Map.of("role", "system", "content", system),
                 Map.of("role", "user", "content", safeJson(payload))
         );
-
-        JsonNode json = chatJson(messages);
-        String summary = json.path("summary").asText("");
-        List<String> recs = json.path("recommendations").isArray() ? json.findValuesAsText("recommendations") : List.of();
-        return new SummaryResponse(summary, recs);
+        try {
+            JsonNode json = chatJson(messages);
+            String summary = json.path("summary").asText("");
+            List<String> recs = json.path("recommendations").isArray() ? json.findValuesAsText("recommendations") : List.of();
+            return new SummaryResponse(summary, recs);
+        } catch (Exception e) {
+            return new SummaryResponse("AI temporarily unavailable. We will generate your consultation summary shortly.", List.of());
+        }
     }
 
     @Override
